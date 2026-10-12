@@ -14,6 +14,6 @@ export async function GET() {
     if (!response.ok) return Response.json(body, { status: response.status });
     return Response.json({ user: body.user, organization: body.organization });
   } catch {
-    return Response.json({ detail: "Sign-in is unavailable" }, { status: 503 });
+    return Response.json({ detail: "Workspace is unavailable" }, { status: 503 });
   }
 }

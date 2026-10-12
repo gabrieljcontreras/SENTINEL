@@ -9,15 +9,13 @@ type Session = {
 };
 
 export function UserSettings() {
-  const session = useSession();
   return (
     <>
-      <PageHeading title="User settings" subtitle="The account that is signed in." />
-      <Panel title="Account">
+      <PageHeading title="User settings" subtitle="Dashboard access does not require an account." />
+      <Panel title="Access">
         <dl className="grid gap-3 p-4 text-sm">
-          <Row label="Name" value={session?.user.name} />
-          <Row label="Email" value={session?.user.email} />
-          <Row label="User id" value={session?.user.id} />
+          <Row label="Access" value="Public workspace" />
+          <Row label="Sign-in" value="Not required" />
         </dl>
       </Panel>
     </>

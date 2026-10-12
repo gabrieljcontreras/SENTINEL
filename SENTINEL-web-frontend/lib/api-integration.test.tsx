@@ -9,7 +9,7 @@ import { InspectionDataProvider } from "./inspection-data";
 import { QueueProvider } from "./queue-data";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
-// Route handlers read the session cookie, which only exists inside a request.
+// No browser session is needed to access the dashboard.
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 afterEach(() => vi.unstubAllGlobals());
 
@@ -44,10 +44,11 @@ it("renders backend records through the real Next routes, API client, and provid
   const requests: string[] = [];
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (input: string) => {
+    vi.fn(async (input: string, init?: RequestInit) => {
       if (input === "/api/dataset") return datasetGET();
       if (input === "/api/queue") return queueGET();
       const path = new URL(input).pathname + new URL(input).search;
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer sentinel-public-dashboard");
       requests.push(path);
       if (path === "/dataset?source=orbit") return Response.json(orbit);
       if (path === "/dataset?source=kit" || path === "/dataset?source=spot")
@@ -78,6 +79,7 @@ it("renders backend records through the real Next routes, API client, and provid
     </InspectionDataProvider>,
   );
   const metrics = await screen.findByLabelText("Operational metrics");
+  expect(screen.queryByRole("button", { name: "Sign out" })).not.toBeInTheDocument();
   // The sidebar links to the Orbit settings page; source names must not leak into content.
   expect(screen.getByRole("main")).not.toHaveTextContent(/orbit|SENSOR_TIMEOUT|raw data/i);
   expect(metrics).toHaveTextContent("0 / 1 recorded outcomes passed");

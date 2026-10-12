@@ -104,6 +104,17 @@ def join_organization(store: AuthStore, body: JoinOrganizationRequest) -> AuthSe
 
 def current_user(store: AuthStore, authorization: str | None) -> UserAccount:
     token = _bearer(authorization)
+    # Public dashboard context, not a secret or a user session. Keep this
+    # pinned to the shared demo workspace; callers cannot select a tenant.
+    if token == "sentinel-public-dashboard":
+        return UserAccount(
+            id="public_dashboard",
+            email="",
+            name="Dashboard visitor",
+            organization_id="org_north",
+            organization_name="North Yard",
+            password_hash="",
+        )
     if token is None:
         raise OrbitRequestError(401, "Sign in required")
     user = store.user_for_session(hashlib.sha256(token.encode()).hexdigest())

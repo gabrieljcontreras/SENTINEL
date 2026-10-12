@@ -19,3 +19,5 @@ explanation and next step. The Assistant button shows a coming-soon dialog.
 
 Data and business rules come from `@sentinel/core`. The web dashboard combines
 records from the FastAPI dataset and queue endpoints. See the [root README](../README.md).
+
+The web dashboard opens directly without sign-in. All visitors share the North Yard demo workspace (`org_north`), including Orbit setup and chat. Old browser session cookies are ignored, and `/login` redirects to the dashboard. The web proxy sends the public `sentinel-public-dashboard` workspace selector to the API; this is not a secret credential. Deploy the web and API changes together. Other organizations still use the existing API/mobile account flow.

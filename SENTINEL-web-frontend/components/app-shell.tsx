@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useContext, useEffect, type CSSProperties, type ReactNode } from "react";
 import {
   Building2,
   History,
@@ -66,7 +66,6 @@ function ShellGrid({ children }: { children: ReactNode }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const inheritedChat = useContext(SideChatContext);
   const path = usePathname();
-  const signedOut = path === "/login";
   const data = useInspectionData();
   const queue = useQueue();
   const inspectionState = useInspectionState();
@@ -81,29 +80,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         : [inspectionState];
   const { reviewedIds } = useReviews();
   const { theme, toggleTheme } = useTheme();
-  const signOutDialog = useRef<HTMLDialogElement>(null);
-  const [organizationName, setOrganizationName] = useState("");
-  const [userName, setUserName] = useState("");
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
-  useEffect(() => {
-    if (signedOut) return;
-    let active = true;
-    void fetch("/api/auth/session")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body) => {
-        if (!active || !body) return;
-        if (typeof body.organization?.name === "string") setOrganizationName(body.organization.name);
-        if (typeof body.user?.name === "string") setUserName(body.user.name);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [signedOut]);
-  if (signedOut) return children;
   const counts: Record<string, number | undefined> = {
     "/missions": data.missions.length,
     "/review": selectQueue(queue, { reviewedIds }).length,
@@ -146,18 +126,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Sun className="size-4" />
           )}
         </Button>
-        <Button
-          className="quiet"
-          onClick={() => signOutDialog.current?.showModal()}
-        >
-          Sign out
-        </Button>
         <Link
           href="/settings/user"
           aria-label="User settings"
           className="grid size-7 place-items-center rounded-full border text-[10px]"
         >
-          OP
+          V
         </Link>
       </header>
       <aside className="app-nav flex flex-col border-r bg-sidebar p-3 text-sidebar-foreground">
@@ -170,9 +144,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="dark:invert"
           />
           <div className="leading-none">
-            <strong className="block text-xs leading-none">{organizationName || "Organization"}</strong>
+            <strong className="block text-xs leading-none">North Yard</strong>
             <small className="mt-0.5 block text-[10px] leading-none text-muted-foreground">
-              {userName}
+              Public workspace
             </small>
           </div>
         </div>
@@ -228,32 +202,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <DataBoundary requests={requests}>{children}</DataBoundary>
       </main>
       <SideChatPanel />
-      <dialog
-        ref={signOutDialog}
-        aria-labelledby="sign-out-title"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) signOutDialog.current?.close();
-        }}
-      >
-        <header className="dialog-head">
-          <h2 id="sign-out-title">Sign out</h2>
-        </header>
-        <div className="dialog-content">
-          <p>Are you sure?</p>
-        </div>
-        <footer className="dialog-foot">
-          <Button onClick={() => signOutDialog.current?.close()}>Cancel</Button>
-          <Button
-            onClick={() => {
-              void fetch("/api/auth/logout", { method: "POST" }).then(() => {
-                window.location.href = "/login";
-              });
-            }}
-          >
-            Sign out
-          </Button>
-        </footer>
-      </dialog>
     </ShellGrid>
   );
   return inheritedChat ? frame : <SideChatProvider>{frame}</SideChatProvider>;

@@ -105,11 +105,18 @@ INSERT INTO sentinel.measurement_definitions (id, name, canonical_unit) VALUES
     ('LOCALIZATION_CONFIDENCE_PCT', 'Localization confidence', 'pct')
 ON CONFLICT (id) DO NOTHING;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON
-    sentinel.asset_types,
-    sentinel.measurement_definitions,
-    sentinel.anomaly_baselines
-TO "ad65c919-7b3e-4b8c-9184-e9dabbc56625";
+-- This Lakebase role is optional on independently hosted Postgres.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ad65c919-7b3e-4b8c-9184-e9dabbc56625') THEN
+        GRANT SELECT, INSERT, UPDATE, DELETE ON
+            sentinel.asset_types,
+            sentinel.measurement_definitions,
+            sentinel.anomaly_baselines
+        TO "ad65c919-7b3e-4b8c-9184-e9dabbc56625";
+    END IF;
+END
+$$;
 
 CREATE POLICY anomaly_baselines_org ON sentinel.anomaly_baselines
     FOR ALL

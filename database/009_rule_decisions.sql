@@ -44,10 +44,17 @@ CREATE TABLE IF NOT EXISTS sentinel.rule_firings (
 CREATE INDEX IF NOT EXISTS rule_firings_rule_idx
     ON sentinel.rule_firings (rule_id);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON
-    sentinel.rule_decisions,
-    sentinel.rule_firings
-TO "ad65c919-7b3e-4b8c-9184-e9dabbc56625";
+-- This Lakebase role is optional on independently hosted Postgres.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ad65c919-7b3e-4b8c-9184-e9dabbc56625') THEN
+        GRANT SELECT, INSERT, UPDATE, DELETE ON
+            sentinel.rule_decisions,
+            sentinel.rule_firings
+        TO "ad65c919-7b3e-4b8c-9184-e9dabbc56625";
+    END IF;
+END
+$$;
 
 CREATE POLICY rule_decisions_org ON sentinel.rule_decisions
     FOR ALL

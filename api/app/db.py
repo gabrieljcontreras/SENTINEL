@@ -1,7 +1,7 @@
-"""Lakebase connection.
+"""Postgres connection (DATABASE_URL or Databricks Lakebase).
 
-Opens one Postgres session with the Databricks workspace credential and sets
-the session time zone to UTC. Callers pass the organization into each query.
+Opens one Postgres session using DATABASE_URL or a Databricks credential and
+sets the session time zone to UTC. Callers pass the organization into each query.
 Row security is not turned on here.
 """
 import os
@@ -18,7 +18,12 @@ load_dotenv(ROOT / ".env")
 
 
 def connect() -> psycopg.Connection:
-    """Open a Lakebase connection using a short-lived Databricks credential."""
+    """Use a standard Postgres URL when configured, otherwise use Lakebase."""
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
+        conn = psycopg.connect(database_url, connect_timeout=30, row_factory=dict_row)
+        conn.execute("SET TIME ZONE 'UTC'")
+        return conn
     client = WorkspaceClient(scopes=["postgres"])
     endpoint = os.environ.get("ENDPOINT_NAME")
     host = os.environ.get("PGHOST") or os.environ.get("LAKEBASE_HOST")
